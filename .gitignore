@@ -1,0 +1,40 @@
+# Python
+*.py[cod]
+*.pyo
+*.pyc
+__pycache__/
+*.egg-info/
+.Python
+
+# Virtual environment
+venv/
+env/
+.venv/
+.env/
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# Dependency directories
+dist/
+build/
+
+# Byte-compiled / optimized / DLL files
+_pycache/
+*.py[cod]
+
+# Installation artifacts
+*.egg
+*.egg-info
+.installed.cfg
+*.egg
+*.whl
+
+# PyInstaller
