@@ -1,7 +1,5 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from tic_tac_toe_ai.tic_tac_toe_ai import play_game
+import tensorflow as tf
 
 
 def print_hi(name):
@@ -11,6 +9,14 @@ def print_hi(name):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('Kartikeya')
+    physical_devices = tf.config.list_physical_devices('GPU')
+
+    if len(physical_devices) > 0:
+        print("CUDA is enabled. Available GPU devices:")
+        for device in physical_devices:
+            print(device)
+    else:
+        print("CUDA is not enabled. Only CPU available.")
+    play_game()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

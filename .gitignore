@@ -38,3 +38,6 @@ _pycache/
 *.whl
 
 # PyInstaller
+
+# Pre-trained Models
+.keras
