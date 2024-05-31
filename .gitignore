@@ -41,3 +41,4 @@ _pycache/
 
 # Pre-trained Models
 .keras
+/tic_tac_toe_ai/tic_tac_toe_model.keras

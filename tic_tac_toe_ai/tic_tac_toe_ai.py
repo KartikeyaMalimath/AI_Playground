@@ -1,205 +1,108 @@
-# Tic Tac Toe game
 import os
 import tensorflow as tf
-from tensorflow.keras.saving import save_model
+from tic_tac_toe_ai.tic_tac_toe_game import TicTacToe
+from tic_tac_toe_ai.tic_tac_toe_graph import TicTacToeGraphPlotter
+from tic_tac_toe_ai.ttt_neural_network import create_model, DQNAgent
+import logging
 
-import tic_tac_toe_ai.ttt_neural_network
-
-# Creating the board
-board = [' ' for _ in range(9)]
-
-
-def refresh_board():
-    global board
-    board = [' ' for _ in range(9)]
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
-# Function to print the board
-def print_board():
-    print('---------')
-    for i in range(3):
-        print('|', board[i * 3], '|', board[i * 3 + 1], '|', board[i * 3 + 2], '|')
-        print('---------')
+def save_model(model, filename="tic_tac_toe_ai/tic_tac_toe_model.keras"):
+    model.save(filename)
+    logger.info(f"Model saved to {filename}")
 
 
-# Function to check if a player has won
-def check_win(player):
-    # Check rows
-    if player == "Bot":
-        board_state_marker = "O"
-    else:
-        board_state_marker = "X"
-
-    for i in range(3):
-        if board[i * 3] == board[i * 3 + 1] == board[i * 3 + 2] == board_state_marker:
-            return True
-    # Check columns
-    for i in range(3):
-        if board[i] == board[i + 3] == board[i + 6] == board_state_marker:
-            return True
-    # Check diagonals
-    if board[0] == board[4] == board[8] == board_state_marker:
-        return True
-    if board[2] == board[4] == board[6] == board_state_marker:
-        return True
-    return False
+def load_model(filename="tic_tac_toe_ai/tic_tac_toe_model.keras"):
+    if os.path.exists(filename):
+        model = tf.keras.models.load_model(filename)
+        logger.info(f"Model loaded from {filename}")
+        return model
+    return create_model()
 
 
-def get_winning_move(player):
-    if player in ["Bot_2"]:
-        marker = "O"
-    else:
-        marker = "X"
+def play_game(agent, players, episodes):
+    wanna_play_game = True
+    # Example usage:
+    plotter = TicTacToeGraphPlotter()
 
-    # Check rows
-    for i in range(3):
-        if board[i * 3] == board[i * 3 + 1] == marker and board[i * 3 + 2] == ' ':
-            return i * 3 + 3
-        elif board[i * 3] == board[i * 3 + 2] == marker and board[i * 3 + 1] == ' ':
-            return i * 3 + 2
-        elif board[i * 3 + 1] == board[i * 3 + 2] == marker and board[i * 3] == ' ':
-            return i * 3 + 1
-
-    # Check columns
-    for i in range(3):
-        if board[i] == board[i + 3] == marker and board[i + 6] == ' ':
-            return i + 7
-        elif board[i] == board[i + 6] == marker and board[i + 3] == ' ':
-            return i + 4
-        elif board[i + 3] == board[i + 6] == marker and board[i] == ' ':
-            return i + 1
-
-    # Check main diagonal
-    if board[0] == board[4] == marker and board[8] == ' ':
-        return 9
-    elif board[0] == board[8] == marker and board[4] == ' ':
-        return 5
-    elif board[4] == board[8] == marker and board[0] == ' ':
-        return 1
-
-    # Check secondary diagonal
-    if board[2] == board[4] == marker and board[6] == ' ':
-        return 7
-    elif board[2] == board[6] == marker and board[4] == ' ':
-        return 5
-    elif board[4] == board[6] == marker and board[2] == ' ':
-        return 3
-
-    return None
-
-
-def get_player_name():
-    player_name = input("Enter your name: ")
-    # player_name = "test_bot"
-    if player_name:
-        return player_name
-    else:
-        get_player_name()
-
-
-# Function to play the game
-def play_game():
-    game_close = True
-    counter = 0
-
-    game_mode = int(input("Enter 1 for Human vs Bot or 2 for Bot vs Bot: "))
-
-    if game_mode == 1:
-        player_1 = get_player_name()
-        player_2 = "Bot_2"
-    else:
-        player_1 = "Bot_1"
-        player_2 = "Bot_2"
-
-    model_file = 'tic_tac_toe_ai/tic_tac_toe_model.keras'
-
-    if os.path.exists(model_file):
-        print("Using Pre-Trained Model")
-        model = tf.keras.models.load_model(model_file)
-    else:
-        model = tic_tac_toe_ai.ttt_neural_network.create_model()
-
-    while game_close:
-        current_player = player_1
+    while wanna_play_game:
         game_over = False
-        game_history = []
+        env = TicTacToe()
+        state = env.reset()
+        env.render()
+
+        actions_player_1 = []
+        actions_player_2 = []
 
         while not game_over:
-            print_board()
-
-            if current_player == player_2:
-                player_identity = "player_2"
-                move = tic_tac_toe_ai.ttt_neural_network.get_nn_move(board_state=board,
-                                                                     model=model,
-                                                                     player_identity=player_identity)
-            else:
-                player_identity = "player_1"
-                if game_mode == 1:
-                    move = int(input(f"Player {current_player}, enter your move (1-9): "))
+            for player_num, player_type in enumerate(players, 1):
+                if player_type == 'human':
+                    action = TicTacToe.human_move(env)
                 else:
-                    move = tic_tac_toe_ai.ttt_neural_network.get_nn_move(board_state=board,
-                                                                         model=model,
-                                                                         player_identity=player_identity)
-            if board[move - 1] == ' ':
-                board_state_marker = "O" if current_player == player_2 else "X"
-                game_history.append((board.copy(), move, 0, player_identity))
-                board[move - 1] = board_state_marker
+                    action = agent.choose_action(state, env)
+                    print(f"AI Player {player_num} Move: {action}")
 
-                if check_win(current_player):
-                    print_board()
-                    print(f"Player {current_player} wins!")
-                    if current_player == player_1:
-                        reward_player_1 = 1
-                        reward_player_2 = -1
-                    else:
-                        reward_player_1 = -1
-                        reward_player_2 = 1
+                if player_num == 1:
+                    actions_player_1.append(action)
+                else:
+                    actions_player_2.append(action)
+
+                next_state, done, winner = env.step(action, player_num)
+                env.render()
+
+                # Train the agent after each move
+                reward = 0
+                agent.train(state, action, reward, next_state, done)
+
+                state = next_state
+
+                if done:
                     game_over = True
-                elif ' ' not in board:
-                    print_board()
-                    print("It's a tie!")
-                    reward_player_1 = reward_player_2 = 0
-                    game_over = True
-                else:
-                    winning_move = get_winning_move(player=current_player)
-                    if winning_move is not None:
-                        # Assign a reward for blocking the opponent's winning move
-                        reward_player_1 = reward_player_2 = 0.5
+                    if winner == 0:
+                        print("It's a draw!")
+                        game_outcome = (0, 0)
                     else:
-                        reward_player_1 = reward_player_2 = 0
-            else:
-                print("Invalid move, try again.")
-                if current_player == player_1:
-                    reward_player_1 = -1
-                    reward_player_2 = 0
-                else:
-                    reward_player_1 = 0
-                    reward_player_2 = -1
+                        print(f"Player {winner} wins!")
+                        if winner == 1:
+                            game_outcome = (1, 0)
+                        else:
+                            game_outcome = (0, 1)
 
-            # Append the reward to the game history for player 1
-            game_history.append((board.copy(), move, reward_player_1, player_1))
+                    plotter.add_game(actions_player_1, actions_player_1, game_outcome)
 
-            # Append the reward to the game history for player 2
-            game_history.append((board.copy(), move, reward_player_2, player_2))
+                    print("Episodes", episodes)
+                    if episodes is not None:
+                        episodes -= 1
+                        if episodes <= 0:
+                            wanna_play_game = False
+                            save_model(agent.model)
+                        break
+                    else:
+                        continue_playing = input("Do you want to play another game? (Y/N): ").strip().lower()
+                        if continue_playing != 'y':
+                            save_model(agent.model)
+                            wanna_play_game = False
+                        break
+    plotter.plot_predictions()
 
-            # Update the model with reinforcement learning using the game history and rewards
-            tic_tac_toe_ai.ttt_neural_network.update_model_with_rl(model=model,
-                                                                   game_history=game_history)
 
-            current_player = player_2 if current_player == player_1 else player_1
+def initialize_game():
+    state_size = (3, 3, 1)
+    action_size = 9
+    agent = DQNAgent(state_size, action_size)
+    episodes = None
 
-        if game_mode == 1:
-            print("Do you want to play again? (Y/N)")
-            if input().upper() != "Y":
-                game_close = False
-        else:
-            counter += 1
-            if counter == 100:
-                game_close = False
+    players = []
+    for i in range(1, 3):
+        player_type = input(f"Choose player {i} (human/ai): ").strip().lower()
+        players.append(player_type)
 
-        # Save the updated model
-        save_model(model, model_file)
-        print("Model saved and saved successfully!")
+    if 'human' not in players:
+        episodes = int(input(f"How many episodes do you want AI to play? "))
 
-        # Refresh the board for the next game
-        refresh_board()
+    # Play the game
+    play_game(agent, players, episodes)
+

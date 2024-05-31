@@ -1,4 +1,4 @@
-from tic_tac_toe_ai.tic_tac_toe_ai import play_game
+from tic_tac_toe_ai.tic_tac_toe_ai import initialize_game
 import tensorflow as tf
 
 
@@ -17,6 +17,6 @@ if __name__ == '__main__':
             print(device)
     else:
         print("CUDA is not enabled. Only CPU available.")
-    play_game()
+    initialize_game()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
